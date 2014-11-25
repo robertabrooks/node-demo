@@ -52,12 +52,27 @@ var db = new sqlite3.Database(dbPath, function(err) {
         });
 
         //GET /api/tasks/:id - gets a particular task
-
+        app.get('/api/tasks/:id', function(req, res, next) {
+            db.get('select rowid, title, done from Tasks where rowid=?', req.params.id, function(err, row) {
+                if (err) {
+                    return next(err);
+                }
+                if (row) {
+                    res.json(row);
+                }
+                else {
+                    next({statusCode: 404, message: 'Invalid task id!'});
+                }
+            });
+        });
 
         //PUT /api/tasks/:id - updates a particular task
         app.put('/api/tasks/:id', function(req, res, next) {
 
             db.run('update Tasks set done=? where rowid=?', req.body.done, req.params.id, function(err) {
+                if (!req.body.title || req.body.title.trim().length == 0) {
+                    turn.next({statusCod: 400, message: 'You must supply a title!'});
+                }
                 if (err){
                     return next(err);
                 }
